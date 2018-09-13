@@ -22,7 +22,7 @@ contract('Exchange Order Tests', function (accounts) {
         });
     });
 
-    it("should be possible to add fully fulfill buy orders", function () {
+    it("should be possible to fulfill sell market orders", function () {
         var myExchangeInstance;
         return exchange.deployed().then(function (instance) {
             myExchangeInstance = instance;

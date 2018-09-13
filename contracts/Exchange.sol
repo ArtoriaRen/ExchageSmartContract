@@ -241,31 +241,133 @@ contract Exchange is Owned {
     //----------NEW ORDER - BID ORDER--------------//
     function buyToken (string symbolName, uint priceInWei, uint amount) {
         uint8 symbolIndex = getSymbolIndexOrThrow(symbolName);
-        // the amount of Ether we will spend to buy the token
-        uint totalAmountEthNecessary = priceInWei * amount;
-        // make sure we have enough Ether to buy the token
-        require(balanceEthForAddress[msg.sender] >= totalAmountEthNecessary);
-
-        // overflow check
-        require(totalAmountEthNecessary >= priceInWei);
-        require(totalAmountEthNecessary >= amount);
-        require(balanceEthForAddress[msg.sender] - totalAmountEthNecessary >= 0);
-
-        // first deduct the amount of Ether from user's balanceEthForAddress
-        balanceEthForAddress[msg.sender] -= totalAmountEthNecessary;
 
         if (tokens[symbolIndex].amountSellPrices == 0 || tokens[symbolIndex].curSellPrice > priceInWei){
+            // Limit order: we don't have sell orders to filfull this buy order, so we create a limit order.
+            // the amount of Ether we will spend to buy the token
+            uint totalAmountEthNecessary = priceInWei * amount;
+            // make sure we have enough Ether to buy the token
+            require(balanceEthForAddress[msg.sender] >= totalAmountEthNecessary);
+
+            // overflow check
+            require(totalAmountEthNecessary >= priceInWei);
+            require(totalAmountEthNecessary >= amount);
+            require(balanceEthForAddress[msg.sender] - totalAmountEthNecessary >= 0);
+
+            // first deduct the amount of Ether from user's balanceEthForAddress
+            balanceEthForAddress[msg.sender] -= totalAmountEthNecessary;
             // Limit order: We don't have sell orders to filfull this buy order, so we need to create a limit order.
             addBuyOffer(symbolIndex, priceInWei, amount, msg.sender);
-            // The last element of this Event is the offer_key.
-            emit LimitBuyOrderCreated(symbolIndex, msg.sender, amount, priceInWei,
-                tokens[symbolIndex].buyBook[priceInWei].offers_length -1);
         } else {
-            /*Market order: current sell price is smaller or equal to
+            /* Market order: current sell price is smaller or equal to
             priceInWei (the buy price of this order),
-            so we ca fulfill the order immediately. */
+            so we can fulfill the order immediately.
 
-            revert(); //just a placeholder for now.
+            Goal: Start from the curSellPrice (highest buy price), buy our tokens.
+            e.g. [sell: 60@5000] [sell: 50@4500] [buy: 500@6000]
+
+            Steps:
+            1. buy 50@4500
+            2. buy 60@5000
+            if still something remaining -> buyToken limit order.
+            */
+
+            uint iteratePrice = tokens[symbolIndex].curSellPrice;
+            uint remainingAmountToBuy = amount;
+            uint offers_key;
+            uint sellAmount;
+            uint ethToPay;
+            address seller;
+            while(iteratePrice <= priceInWei && remainingAmountToBuy >0){
+                offers_key = tokens[symbolIndex].sellBook[iteratePrice].offers_key;
+                // go through all sell orders at current iterating price
+                while (offers_key < tokens[symbolIndex].sellBook[iteratePrice].offers_length && remainingAmountToBuy >0){
+                    sellAmount = tokens[symbolIndex].sellBook[iteratePrice].offers[offers_key].amount;
+                    /*
+                     We can fulfill at least part of the buy order. There are two cases:
+                     1. the current iterated sell order offers less amount of tokens than
+                        we want to buy, so buy up the volume and try the next sell order, if exists.
+                     2. the current iterated sell order offers larger amount of tokens than
+                        we want to buy. Then this buy order is fully fulfilled.
+                     */
+                    if(remainingAmountToBuy >= sellAmount){
+                        ethToPay = iteratePrice * sellAmount;
+
+                        // substract eth from buyer's account
+                        require(balanceEthForAddress[msg.sender] >= ethToPay);
+                        balanceEthForAddress[msg.sender] -= ethToPay;
+
+                        //overflow check
+                        require(tokenBalanceForAddress[msg.sender][symbolIndex] + sellAmount >= tokenBalanceForAddress[msg.sender][symbolIndex]);
+                        seller = tokens[symbolIndex].sellBook[iteratePrice].offers[offers_key].who;
+                        require(balanceEthForAddress[seller] + ethToPay > balanceEthForAddress[seller]);
+
+                        tokens[symbolIndex].sellBook[iteratePrice].offers[offers_key].amount = 0;
+
+                        // add Ether to seller and token to buyer
+                        balanceEthForAddress[seller] += ethToPay;
+                        tokenBalanceForAddress[msg.sender][symbolIndex] += sellAmount;
+
+                        //emit an event to log the transaction
+                        emit BuyOrderFulfilled(symbolIndex, sellAmount, iteratePrice, offers_key);
+
+                        remainingAmountToBuy -= sellAmount;
+                    } else {
+                        ethToPay = iteratePrice * remainingAmountToBuy;
+
+                        // substract eth from buyer's account
+                        require(balanceEthForAddress[msg.sender] >= ethToPay);
+                        balanceEthForAddress[msg.sender] -= ethToPay;
+
+                        //overflow check
+                        require(tokenBalanceForAddress[msg.sender][symbolIndex] + remainingAmountToBuy >= tokenBalanceForAddress[msg.sender][symbolIndex]);
+                        seller = tokens[symbolIndex].sellBook[iteratePrice].offers[offers_key].who;
+                        require(balanceEthForAddress[seller] + ethToPay > balanceEthForAddress[seller]);
+
+                        tokens[symbolIndex].sellBook[iteratePrice].offers[offers_key].amount -=remainingAmountToBuy;
+
+                        // add Ether to seller and token to buyer
+                        balanceEthForAddress[seller] += ethToPay;
+                        tokenBalanceForAddress[msg.sender][symbolIndex] += remainingAmountToBuy;
+
+                        //emit an event to log the transaction
+                        emit BuyOrderFulfilled(symbolIndex, remainingAmountToBuy, iteratePrice, offers_key);
+
+                        remainingAmountToBuy = 0; // We have fulfilled this buy order.
+                    }
+
+                    // if the sell order we fulfilled is the last order of its price, we must raise the iteratePrice.
+                    if (offers_key == tokens[symbolIndex].sellBook[iteratePrice].offers_length -1 &&
+                    tokens[symbolIndex].sellBook[iteratePrice].offers[offers_key].amount == 0
+                    ){
+                        // we have less sellPrice.
+                        tokens[symbolIndex].amountSellPrices--;
+                        // We have fulfilled all sell orders on the sellBook. The last sellBook entry have lower price pointing to 0.
+                        // ?? I guess this logic can also use tokens[symbolIndex].amountBuyPrices == 0.
+                        if (tokens[symbolIndex].sellBook[iteratePrice].higherPrice == 0){
+                            // There is no more buy offers.
+                            tokens[symbolIndex].curSellPrice = 0;
+                        } else {
+                            tokens[symbolIndex].curSellPrice = tokens[symbolIndex].sellBook[iteratePrice].higherPrice;
+                            // modify lowPrice pointer of the next sellBook entry to point to 0.
+                            tokens[symbolIndex].sellBook[tokens[symbolIndex].curBuyPrice].lowerPrice = 0;
+
+                        }
+
+                    }
+                    offers_key++;
+                }
+                // We used up sell orders for the current iteratePrice so we move to a higher sell price to continue buying tokens.
+                iteratePrice = tokens[symbolIndex].curSellPrice;
+            }
+
+            // If we didn't buy enough tokens because there is no enough sell offers below our price, we create a limit order.
+            if (remainingAmountToBuy > 0){
+                // Why call buyToken() instead of addBuyOffer() here? Because addBuyOffer() only add new offer to sell book.
+                // No Ehter or token is deducted from any account.
+                buyToken(symbolName, priceInWei, remainingAmountToBuy);
+            }
+
         }
     }
 
@@ -323,6 +425,10 @@ contract Exchange is Owned {
                 }
             }
         }
+
+        // The last element of this Event is the offer_key.
+        emit LimitBuyOrderCreated(symbolIndex, msg.sender, amount, priceInWei,
+            tokens[symbolIndex].buyBook[priceInWei].offers_length -1);
     }
 
     //------------NEW ORDER - ASK ORDER------------//
@@ -420,6 +526,8 @@ contract Exchange is Owned {
                         require(tokenBalanceForAddress[buyer][symbolIndex] + buyAmount > tokenBalanceForAddress[buyer][symbolIndex]);
 
                         tokens[symbolIndex].buyBook[iteratePrice].offers[offers_key].amount -= remainingAmountToSell;
+
+                        // add Ether to seller and token to buyer
                         balanceEthForAddress[msg.sender] += ethToReceive;
                         tokenBalanceForAddress[buyer][symbolIndex] += remainingAmountToSell;
 
@@ -434,16 +542,15 @@ contract Exchange is Owned {
                     ){
                         // we have less buyPrice.
                         tokens[symbolIndex].amountBuyPrices--;
-                        // We have fulfilled all buy orders on the buyBook. The last buyBook entry have lower price either point to itself or 0.
+                        // We have fulfilled all buy orders on the buyBook. The last buyBook entry have lower price pointing to 0.
                         // ?? I guess this logic can also use tokens[symbolIndex].amountBuyPrices == 0.
-                        if (iteratePrice == tokens[symbolIndex].buyBook[iteratePrice].lowerPrice ||
-                            tokens[symbolIndex].buyBook[iteratePrice].lowerPrice == 1){
+                        if (tokens[symbolIndex].buyBook[iteratePrice].lowerPrice == 0){
                             // There is no more buy offers.
                             tokens[symbolIndex].curBuyPrice = 0;
                         } else {
                             tokens[symbolIndex].curBuyPrice = tokens[symbolIndex].buyBook[iteratePrice].lowerPrice;
-                            // modify highPrice pointer of the next buyBook entry to point to itself.
-                            tokens[symbolIndex].buyBook[tokens[symbolIndex].curBuyPrice].higherPrice = tokens[symbolIndex].curBuyPrice;
+                            // modify higherPrice pointer of the next buyBook entry to point to 0.
+                            tokens[symbolIndex].buyBook[tokens[symbolIndex].curBuyPrice].higherPrice = 0;
 
                         }
 
@@ -520,7 +627,7 @@ contract Exchange is Owned {
         }
 
         emit LimitSellOrderCreated(symbolIndex, who, amount, priceInWei,
-            tokens[symbolIndex].sellBook[priceInWei].offers_length);
+            tokens[symbolIndex].sellBook[priceInWei].offers_length-1);
     }
 
     //-----------CANCEL LIMIT ORDER----------------//
