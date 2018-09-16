@@ -117,6 +117,7 @@ contract FixedSupplyToken is ERC20Interface, Owned {
         symbol = "FIXED";
         name = "Example Fixed Supply Token";
         decimals = 0;
+        // total supply is 1M (1,000,000 * 10^0)
         _totalSupply = 1000000 * 10**uint(decimals);
         balances[owner] = _totalSupply;
         Transfer(address(0), owner, _totalSupply);
