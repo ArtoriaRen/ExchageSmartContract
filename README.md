@@ -73,8 +73,26 @@ the owner of the two smart contracts---FixedSupplyToken and Exchange.
     
 ### Exchange Overview Tab
 1. Display Token and Ether balance
+    
     Token is hard coded to "FIXED", so its balance can only be displayed after
     you add "FIXED" token to the Exchange on the "Manage Token Tab".
+
+2. Deposit Token
+    
+    Step 1. In the "Manage Token" tab, approve the Exchange can spend a certain
+    amount of tokens in our name by filling out the "Approve Token Allowance" table with 
+    the Exchange address as "To (address)".
+    
+    Step 2. Go to the "Exchange Overview" tab and fill out the "Deposit Token" tab.
+    Notes that the amount should not exceed that filled in Step 1. This will  credit
+    the amount of tokens inside the Exchange to our address.
+    
+3. Withdraw Token
+    
+    Fill the "Withdraw Token" table. You should see token balance displayed at 
+    the top of the webpage changes.
+    
+If Ether or Token balance is not updated automatically, please refresh the webpage manually.
     
 ## Note
 1. Whenever you restart `testrpc`, run `truffle migrate` again.
@@ -85,5 +103,4 @@ the owner of the two smart contracts---FixedSupplyToken and Exchange.
     the `addTokenToExchange` function, you may need to use `truffle migrate
     --reset` to re-deploy the two contracts so that the Exchange has a fresh
     state.
-
 
