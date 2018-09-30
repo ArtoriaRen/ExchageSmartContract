@@ -1,8 +1,10 @@
 **This project implements an Exchage for trading different cryptocurrencies.**
+# Dependencies
+testrpc, truffle, npm, Metamask
 
 # How to Run Test
 1. In one terminal, run the following command:
-    ```$bash
+    ```bash
     testrpc
     ```
 2. Change directory to `Truffle`.
@@ -18,8 +20,16 @@ In another terminal, run the following command:
     ```
 
 # How to Run Web Application
+Open a terminal and change directory to the root of this project. Use the following command
+to install all the dependencies in the `package.json` file.
+```bash
+npm install
+```
+
+If you run into some errors, try ``npm cache clean`` and then install again use the above command.
+
 1. In one terminal, run the following command:
-    ```$bash
+    ```bash
     testrpc
     ```
     This project use web3 in Metamask. Please enable Metamask extension and
@@ -34,7 +44,8 @@ In a second terminal, run the following command:
     ```bash
     npm run dev
     ```
-    This command start the web server.
+    This command will run the script called `dev` in the `package.json` file.
+     It starts the webpack server.
 3. To deploy all smart contracts under the `/contracts` folder,
  open a third terminal and run the following commmand:
     ```bash
@@ -44,7 +55,8 @@ In a second terminal, run the following command:
 You will see the webpage displayed.
 
 ## Test via Browser
-1. Import the first and second accounts to Metamask. Since the first account 
+Before testing the front-end, make sure to import the first and second accounts to Metamask. 
+Since the first account 
 has been used to deploy smart contracts, its Ether balance will be less than 100. 
 All "FIXED" tokens, 1M, belong to the first accounts. And She is also 
 the owner of the two smart contracts---FixedSupplyToken and Exchange.
@@ -93,7 +105,28 @@ the owner of the two smart contracts---FixedSupplyToken and Exchange.
     the top of the webpage changes.
     
 If Ether or Token balance is not updated automatically, please refresh the webpage manually.
+
+### Fixed Token Trading Tab
+Prior to buying and selling any tokens, add the token to the Exchange in the "Manage Token" tab
+and depoist both token and ether to the Exchange in the "Exchange Overview" tab.
+
+1. Sell Token
+
+Fill the "Sell Token" form in the "Fixed Token Trading" tab. Click on "Sell Token" button.  
+ Metamask will pop up a page asking for confirmation. Click on "Confirm".
+ You should see both update in the "Order Book - Ask" and "Limit orders" 
+ event on the log panel. 
+
     
+2. Buy Token
+
+Fill the "Buy Token" form in the "Fixed Token Trading" tab. Click on "Buy Token" button.  
+ Metamask will pop up a page asking for confirmation. Click on "Confirm". Depending on the
+ price of this buy order, it may be fulfilled directly or added to buyOrderBook as a limit
+ order. If it can be fulfilled, you should see "Fulfilled orders" 
+ event on the log panel; otherwise, you should see both update in the "Order Book - Bid" and "Limit orders" 
+ event on the log panel. 
+ 
 ## Note
 1. Whenever you restart `testrpc`, run `truffle migrate` again.
 1. Refresh the webpage each time you switch account in Metamask, restart `testrpc`, 
@@ -103,4 +136,6 @@ If Ether or Token balance is not updated automatically, please refresh the webpa
     the `addTokenToExchange` function, you may need to use `truffle migrate
     --reset` to re-deploy the two contracts so that the Exchange has a fresh
     state.
+    
+
 

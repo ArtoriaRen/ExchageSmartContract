@@ -233,15 +233,197 @@ window.App = {
     },
     updateOrderBooks: function () {
         //update the order books function
+        var exchangeInstance;
+
+        document.getElementById("buyOrderBook").innerHTML = null;
+        document.getElementById("sellOrderBook").innerHTML = null;
+
+        ExchangeContract.deployed().then(function (instance) {
+            exchangeInstance = instance;
+            // The token is hardcoded to "FIXED". If we have more than one token, we must make the call dynamically.
+            return exchangeInstance.getSellOrderBook("FIXED");
+        }).then(function (sellOrderBook) {
+            // sellOrderBook is a list of two arrays: the first one is price and the second one is volume.
+            console.log(sellOrderBook);
+
+            if(sellOrderBook[0].length == 0){
+                document.getElementById("sellOrderBook").innerHTML = '<span> No sell orders at the moment </span>';
+            } else {
+                for (var i = 0; i < sellOrderBook[0].length; i++){
+                    // e.g. sell 400@5000: sell 400 tokens for 5000 wei.
+                    document.getElementById("sellOrderBook").innerHTML += '<div>sell ' + sellOrderBook[1][i] + '@' + sellOrderBook[0][i] + '</div>'
+                }
+            }
+            return exchangeInstance.getBuyOrderBook("FIXED");
+        }).then(function (buyOrderBook) {
+            // buyOrderBook is a list of two arrays: the first one is price and the second one is volume.
+            console.log(buyOrderBook);
+
+            if(buyOrderBook[0].length == 0){
+                document.getElementById("buyOrderBook").innerHTML = '<span> No buy orders at the moment </span>';
+            } else {
+                for (var i = 0; i < buyOrderBook[0].length; i++){
+                    // e.g. buy 400@5000: buy 400 tokens for 5000 wei.
+                    document.getElementById("buyOrderBook").innerHTML += '<div>buy ' + buyOrderBook[1][i] + '@' + buyOrderBook[0][i] + '</div>';
+                }
+            }
+        }).catch(function (e) {
+            console.log(e);
+            App.setStatus("Error get buy or buy order book; see log.");
+        })
+
     },
     listenToTradingEvents: function () {
 //listen to trading events
+        var exchangeInstance;
+
+        ExchangeContract.deployed().then(function (instance) {
+            exchangeInstance = instance;
+
+            exchangeInstance.LimitSellOrderCreated({}, {
+                fromBlock: 0,
+                toBlock: 'latest'
+            }).watch(function (error, result) {
+                var alertBox = document.createElement("div");
+                alertBox.setAttribute("class", "alert alert-info alert-dismissable");
+                var closeBtn = document.createElement("button");
+                closeBtn.setAttribute("type", "button");
+                closeBtn.setAttribute("class", "close");
+                closeBtn.setAttribute("data-dismiss", "alert");
+                closeBtn.innerHTML = "<span>&times;</span>";
+                alertBox.appendChild(closeBtn);
+
+                var eventTitle = document.createElement("div");
+                eventTitle.innerHTML = '<strong>New Event: ' + result.event + '</strong>';
+                alertBox.appendChild(eventTitle);
+
+
+                var argsBox = document.createElement("textarea");
+                argsBox.setAttribute("class", "form-control");
+                argsBox.innerText = JSON.stringify(result.args);
+                alertBox.appendChild(argsBox);
+                document.getElementById("limitOrderEvents").appendChild(alertBox);
+            });
+
+            exchangeInstance.LimitBuyOrderCreated({}, {
+                fromBlock: 0,
+                toBlock: 'latest'
+            }).watch(function (error, result) {
+                var alertBox = document.createElement("div");
+                alertBox.setAttribute("class", "alert alert-info alert-dismissable");
+                var closeBtn = document.createElement("button");
+                closeBtn.setAttribute("type", "button");
+                closeBtn.setAttribute("class", "close");
+                closeBtn.setAttribute("data-dismiss", "alert");
+                closeBtn.innerHTML = "<span>&times;</span>";
+                alertBox.appendChild(closeBtn);
+
+                var eventTitle = document.createElement("div");
+                eventTitle.innerHTML = '<strong>New Event: ' + result.event + '</strong>';
+                alertBox.appendChild(eventTitle);
+
+
+                var argsBox = document.createElement("textarea");
+                argsBox.setAttribute("class", "form-control");
+                argsBox.innerText = JSON.stringify(result.args);
+                alertBox.appendChild(argsBox);
+                document.getElementById("limitOrderEvents").appendChild(alertBox);
+                //document.getElementById("tokenEvents").innerHTML += '<div class="alert alert-info  alert-dismissible" role="alert"> <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button><div></div><div>Args: '+JSON.stringify(result.args) + '</div></div>';
+            });
+
+            exchangeInstance.SellOrderFulfilled({}, {
+                fromBlock: 0,
+                toBlock: 'latest'
+            }).watch(function (error, result) {
+                var alertBox = document.createElement("div");
+                alertBox.setAttribute("class", "alert alert-info alert-dismissable");
+                var closeBtn = document.createElement("button");
+                closeBtn.setAttribute("type", "button");
+                closeBtn.setAttribute("class", "close");
+                closeBtn.setAttribute("data-dismiss", "alert");
+                closeBtn.innerHTML = "<span>&times;</span>";
+                alertBox.appendChild(closeBtn);
+
+                var eventTitle = document.createElement("div");
+                eventTitle.innerHTML = '<strong>New Event: ' + result.event + '</strong>';
+                alertBox.appendChild(eventTitle);
+
+
+                var argsBox = document.createElement("textarea");
+                argsBox.setAttribute("class", "form-control");
+                argsBox.innerText = JSON.stringify(result.args);
+                alertBox.appendChild(argsBox);
+                document.getElementById("fulfillOrderEvents").appendChild(alertBox);
+                //document.getElementById("tokenEvents").innerHTML += '<div class="alert alert-info  alert-dismissible" role="alert"> <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button><div></div><div>Args: '+JSON.stringify(result.args) + '</div></div>';
+            });
+
+            exchangeInstance.BuyOrderFulfilled({}, {
+                fromBlock: 0,
+                toBlock: 'latest'
+            }).watch(function (error, result) {
+                var alertBox = document.createElement("div");
+                alertBox.setAttribute("class", "alert alert-info alert-dismissable");
+                var closeBtn = document.createElement("button");
+                closeBtn.setAttribute("type", "button");
+                closeBtn.setAttribute("class", "close");
+                closeBtn.setAttribute("data-dismiss", "alert");
+                closeBtn.innerHTML = "<span>&times;</span>";
+                alertBox.appendChild(closeBtn);
+
+                var eventTitle = document.createElement("div");
+                eventTitle.innerHTML = '<strong>New Event: ' + result.event + '</strong>';
+                alertBox.appendChild(eventTitle);
+
+
+                var argsBox = document.createElement("textarea");
+                argsBox.setAttribute("class", "form-control");
+                argsBox.innerText = JSON.stringify(result.args);
+                alertBox.appendChild(argsBox);
+                document.getElementById("fulfillOrderEvents").appendChild(alertBox);
+                //document.getElementById("tokenEvents").innerHTML += '<div class="alert alert-info  alert-dismissible" role="alert"> <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button><div></div><div>Args: '+JSON.stringify(result.args) + '</div></div>';
+            });
+
+        }).catch(function (e) {
+            console.log(e);
+            App.setStatus("Error listen to trading events; see log.");
+        })
     },
     sellToken: function () {
         //sell token
+        var tokenName = document.getElementById("inputNameSellToken").value;
+        var amount = document.getElementById("inputAmountSellToken").value;
+        var price= document.getElementById("inputPriceSellToken").value;
+        var exchangeInstance;
+        ExchangeContract.deployed().then(function(instance) {
+            exchangeInstance = instance;
+            console.log(tokenName+price+amount);
+            return exchangeInstance.sellToken(tokenName, price, amount, {from: account});
+        }).then(function(txResult) {
+            App.refreshBalanceExchange();
+            App.updateOrderBooks();
+        }).catch(function(e) {
+            console.log(e);
+            App.setStatus("Error sell tokens; see log.");
+        });
+
     },
     buyToken: function () {
-//buy token
+        //buy token
+        var tokenName = document.getElementById("inputNameBuyToken").value;
+        var amount = document.getElementById("inputAmountBuyToken").value;
+        var price= document.getElementById("inputPriceBuyToken").value;
+        var exchangeInstance;
+        ExchangeContract.deployed().then(function(instance) {
+            exchangeInstance = instance;
+            console.log(tokenName+price+amount);
+            return exchangeInstance.buyToken(tokenName, price, amount, {from: account});
+        }).then(function(txResult) {
+            App.refreshBalanceExchange();
+            App.updateOrderBooks();
+        }).catch(function(e) {
+            console.log(e);
+            App.setStatus("Error buy tokens; see log.");
+        });
     },
 
     /**
