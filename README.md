@@ -2,8 +2,8 @@
 ## Overview of the webpage
 <img src="images/exchange.png" width="800">
 <img src="images/trade.png" width="800">
-<img src="images/manage_token.png" width="800">
-The webpage is hosted at Github Pages [https://artoriaren.github.io/ExchageSmartContract/](https://artoriaren.github.io/ExchageSmartContract/).
+<img src="images/manage.png" width="800">
+The first webpage is hosted at Github Pages [https://artoriaren.github.io/ExchageSmartContract/](https://artoriaren.github.io/ExchageSmartContract/).
 
 ## Dependencies
 testrpc v6.0.3, truffle 4.1.7, npm, Metamask. This project is developed with Remix, the online Solidity IDE.
