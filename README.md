@@ -1,4 +1,5 @@
 # This project implements an Exchage for trading different cryptocurrencies.
+## Overview of the webpage
 <img src="images/exchange.png" width="800">
 <img src="images/trade.png" width="800">
 <img src="images/manage_token.png" width="800">
@@ -32,7 +33,7 @@ npm install -g ethereumjs-testrpc --no-optional
     truffle test
     ```
     This command runs all test files under the `/test` folder. You should see ouptut like the following figure.
-<img src="images/pass_test.png" width="700">
+<img src="images/pass_test.png" width="500">
 
 3. To run a particular test file, e.g. `03_trading_simple.js` , use the following command:
     ```bash
