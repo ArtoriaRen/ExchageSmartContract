@@ -1,5 +1,7 @@
 # This project implements an Exchage for trading different cryptocurrencies.
-<img src="images/web.png" width="800">
+<img src="images/exchange.png" width="800">
+<img src="images/trade.png" width="800">
+<img src="images/manage_token.png" width="800">
 The webpage is hosted at Github Pages [https://artoriaren.github.io/ExchageSmartContract/](https://artoriaren.github.io/ExchageSmartContract/).
 
 ## Dependencies
@@ -7,17 +9,17 @@ testrpc v6.0.3, truffle 4.1.7, npm, Metamask. This project is developed with Rem
 
 ### Install truffle
 ```bash
-sudo npm install -g truffle@4.1.7
+npm install -g truffle@4.1.7
 ```
 
 In case you need to uninstall truffle, use the following command:
 ```bash 
-sudo npm uninstall -g truffle
+npm uninstall -g truffle
 ```
 
 ### Install testrpc
 ```bash
-sudo npm install -g ethereumjs-testrpc --no-optional
+npm install -g ethereumjs-testrpc --no-optional
 ```
 
 ## How to Run Test
