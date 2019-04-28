@@ -1,25 +1,43 @@
-**This project implements an Exchage for trading different cryptocurrencies.**
-# Dependencies
-testrpc, truffle, npm, Metamask
+# This project implements an Exchage for trading different cryptocurrencies.
+<img src="images/web.png" width="800">
+The webpage is hosted at Github Pages [https://artoriaren.github.io/ExchageSmartContract/](https://artoriaren.github.io/ExchageSmartContract/).
 
-# How to Run Test
+## Dependencies
+testrpc v6.0.3, truffle 4.1.7, npm, Metamask. This project is developed with Remix, the online Solidity IDE.
+
+### Install truffle
+```bash
+sudo npm install -g truffle@4.1.7
+```
+
+In case you need to uninstall truffle, use the following command:
+```bash 
+sudo npm uninstall -g truffle
+```
+
+### Install testrpc
+```bash
+sudo npm install -g ethereumjs-testrpc --no-optional
+```
+
+## How to Run Test
 1. In one terminal, run the following command:
     ```bash
     testrpc
     ```
-2. Change directory to `Truffle`.
-In another terminal, run the following command:
+2.  In another terminal, run the following command:
     ```bash
     truffle test
     ```
-    This command runs all test files under the `/test` folder.
+    This command runs all test files under the `/test` folder. You should see ouptut like the following figure.
+<img src="images/pass_test.png" width="700">
 
 3. To run a particular test file, e.g. `03_trading_simple.js` , use the following command:
     ```bash
     truffle test ./test/03_trading_simple.js
     ```
 
-# How to Run Web Application
+## How to Run Web Application
 Open a terminal and change directory to the root of this project. Use the following command
 to install all the dependencies in the `package.json` file.
 ```bash
@@ -28,7 +46,7 @@ npm install
 
 If you run into some errors, try ``npm cache clean`` and then install again use the above command.
 
-1. In one terminal, run the following command:
+1. In one terminal window, run the following command:
     ```bash
     testrpc
     ```
@@ -38,19 +56,18 @@ If you run into some errors, try ``npm cache clean`` and then install again use 
     ```bash
     testrpc -m '<mnemonics>'
     ```
-
-2. Change directory to `Truffle`.
-In a second terminal, run the following command:
-    ```bash
-    npm run dev
-    ```
-    This command will run the script called `dev` in the `package.json` file.
-     It starts the webpack server.
-3. To deploy all smart contracts under the `/contracts` folder,
- open a third terminal and run the following commmand:
+2. To deploy all smart contracts under the `/contracts` folder,
+ open a second terminal window, change directory to the root of this repo,  and run the following commmand:
     ```bash
     truffle migrate
     ```
+
+3.  To start the web server,  open a third terminal window, run the following command:
+    ```bash
+    npm run dev
+    ```
+    This command will run the script`dev` in the `package.json` file.
+    It starts the webpack server.
 4. Open a web browser and connect to `localhost:8080`. 
 You will see the webpage displayed.
 
